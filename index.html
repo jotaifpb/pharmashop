@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHARMASHOP</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+    /* ══════════════════════════════════════════
+       ESTILOS TELA (interface normal)
+    ══════════════════════════════════════════ */
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;600;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'IBM Plex Sans', Arial, sans-serif; background: #0a1628; padding: 16px; font-size: 13px; }
+
+    .header { background: #e8620a; border-radius: 12px; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .header h1 { color: #fff; font-size: 22px; font-weight: bold; letter-spacing: 1px; }
+    .header .dt { color: #fcd9b8; font-size: 12px; }
+
+    .tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+    .tab { background: #112240; border: 1px solid #1e3a5f; color: #7ab3f0; border-radius: 8px; padding: 9px 20px; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.15s; }
+    .tab.active { background: #e8620a; border-color: #e8620a; color: #fff; }
+    .tab:hover:not(.active) { background: #162d50; }
+
+    .card { background: #112240; border-radius: 12px; border: 0.5px solid #1e3a5f; padding: 16px; margin-bottom: 14px; }
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 500px; }
+    thead tr { background: #e8620a; }
+    th { color: #fff; font-size: 12px; font-weight: bold; padding: 10px 8px; text-align: left; white-space: nowrap; }
+    tbody tr { border-bottom: 0.5px solid #1e3a5f; }
+    tbody tr:hover { background: #162d50; }
+    td { padding: 6px; vertical-align: middle; }
+
+    input.fi { background: #0a1628; border: 0.5px solid #2a4a7a; color: #fff; font-size: 12px; font-weight: bold; padding: 6px 8px; border-radius: 6px; width: 100%; text-transform: uppercase; outline: none; }
+    input.fi:focus { border-color: #e8620a; box-shadow: 0 0 0 2px rgba(232,98,10,0.3); }
+    input.fi:hover { border-color: #4a7ab5; }
+    input.fi[readonly] { color: #7ab3f0; background: #0d1e38; }
+    .num-cell { color: #e8620a; font-size: 12px; font-weight: bold; padding: 0 8px; text-align: center; white-space: nowrap; }
+
+    .btn-del-row { background: #3a1a1a; border: 1px solid #7a2a2a; color: #d1d5db; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 12px; font-weight: bold; white-space: nowrap; transition: opacity 0.15s; }
+    .btn-del-row:hover { opacity: 0.8; background: #5a2020; }
+
+    .btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .btn { border: none; border-radius: 8px; padding: 10px 18px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; color: #d1d5db; transition: opacity 0.15s, transform 0.1s; }
+    .btn:hover  { opacity: 0.9; transform: translateY(-1px); }
+    .btn:active { transform: scale(0.97); }
+    .btn-add     { background: #1a3a5c; border: 1px solid #2a5f8f; }
+    .btn-print   { background: #2a1a4a; border: 1px solid #5a3a8a; }
+    .btn-new     { background: #2a2a0a; border: 1px solid #6a5a0a; }
+    .btn-salvar  { background: #0f3d1a; border: 1px solid #1a7a30; }
+    .btn-limpar  { background: #3a1a1a; border: 1px solid #7a2a2a; }
+
+    .total-card { background: #e8620a; border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .total-label { color: #fff; font-size: 13px; font-weight: bold; letter-spacing: 1px; }
+    .total-val { background: #fff; color: #e8620a; font-size: 26px; font-weight: bold; padding: 8px 18px; border-radius: 8px; min-width: 140px; text-align: center; }
+
+    .hist-vazio { color: #4a7ab5; text-align: center; padding: 30px 0; font-size: 13px; }
+    .hist-card { background: #0d1e38; border: 0.5px solid #1e3a5f; border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; }
+    .hist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .hist-id { color: #e8620a; font-weight: bold; font-size: 13px; }
+    .hist-data { color: #7ab3f0; font-size: 11px; }
+    .hist-total { color: #fff; font-weight: bold; font-size: 15px; }
+    .hist-itens { font-size: 11px; color: #7ab3f0; margin-top: 4px; }
+    .hist-actions { display: flex; gap: 6px; margin-top: 8px; }
+    .btn-sm { border: none; border-radius: 6px; padding: 5px 12px; font-size: 11px; font-weight: bold; cursor: pointer; color: #d1d5db; transition: opacity 0.15s; }
+    .btn-sm:hover { opacity: 0.8; }
+    .btn-sm-del   { background: #3a1a1a; border: 1px solid #7a2a2a; }
+    .badge-count { background: #e8620a; color: #fff; border-radius: 10px; padding: 1px 7px; font-size: 11px; margin-left: 6px; }
+
+    /* Campo CNPJ/Info da loja na aba pedido */
+    .loja-info { background: #0d1e38; border: 0.5px solid #1e3a5f; border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; display: flex; flex-wrap: wrap; gap: 10px; }
+    .loja-info label { color: #7ab3f0; font-size: 11px; font-weight: bold; display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
+    .loja-info input { background: #0a1628; border: 0.5px solid #2a4a7a; color: #fff; font-size: 12px; font-weight: bold; padding: 6px 8px; border-radius: 6px; outline: none; text-transform: uppercase; }
+    .loja-info input:focus { border-color: #e8620a; }
+
+    /* ══════════════════════════════════════════
+       CUPOM TÉRMICO (apenas para impressão)
+       Epson TM-T20X: papel 80mm, área útil ~72mm
+       Fonte monoespaçada, 42 colunas
+    ══════════════════════════════════════════ */
+    #cupom-impressao { display: none; }
+
+    @media print {
+        /* Oculta tudo da tela */
+        body > *:not(#cupom-impressao) { display: none !important; }
+
+        /* Exibe o cupom */
+        #cupom-impressao { display: block !important; }
+
+        @page {
+        size: 80mm 297mm; /* Ajuste o tamanho da página para a impressora EPSON T20 */
+        margin: 5mm;
+    	}
+
+        body {
+           font-family: Arial, sans-serif;
+           margin: 0;
+           padding: 0;
+           font-size: 11px;
+            background: #fff !important;
+        }
+
+        /* ─ Cupom térmico ─ */
+        #cupom-impressao {
+            font-family: 'Arial', Courier, monospace !important;
+            font-size: 8.5pt !important;
+            color: #000 !important;
+            background: #fff !important;
+            width: 100% !important;
+            max-width: 72mm !important;
+            line-height: 1.35 !important;
+            word-break: break-word;
+        }
+
+        .cp-center  { text-align: center; }
+        .cp-right   { text-align: right; }
+        .cp-left    { text-align: left; }
+        .cp-bold    { font-weight: bold; }
+        .cp-big     { font-size: 11pt; font-weight: bold; text-align: center; letter-spacing: 2px; }
+        .cp-med     { font-size: 9.5pt; font-weight: bold; text-align: center; }
+        .cp-line    { border-top: 1px dashed #000; margin: 4px 0; }
+        .cp-line-solid { border-top: 1px solid #000; margin: 4px 0; }
+
+        .cp-row     { display: flex; justify-content: space-between; gap: 4px; }
+        .cp-row .cp-desc  { flex: 1; word-break: break-word; }
+        .cp-row .cp-val   { white-space: nowrap; text-align: right; min-width: 60px; }
+
+        .cp-item-block { margin-bottom: 3px; }
+        .cp-item-nome  { font-weight: bold; font-size: 8pt; }
+        .cp-item-detail { display: flex; justify-content: space-between; font-size: 8pt; padding-left: 4px; }
+
+        .cp-total-box  { border: 1px solid #000; padding: 4px 6px; margin: 6px 0; text-align: center; }
+        .cp-total-num  { font-size: 14pt; font-weight: bold; letter-spacing: 1px; }
+        .cp-rodape     { text-align: center; font-size: 7.5pt; margin-top: 4px; }
+    }
+</style>
+</head>
+<body>
+
+<!-- ══════════ INTERFACE TELA ══════════ -->
+<div class="header">
+    <h1>PHARMASHOP</h1>
+    <span class="dt" id="dt"></span>
+</div>
+
+<div class="tabs">
+    <button class="tab active" onclick="trocarAba('pedido', this)">📄 Novo Pedido</button>
+    <button class="tab" onclick="trocarAba('historico', this)">📋 Histórico <span class="badge-count" id="badge">0</span></button>
+</div>
+
+<!-- ABA PEDIDO -->
+<div id="sec-pedido" class="section active">
+
+    <!-- Dados da loja (aparecem no cupom) -->
+    <div class="loja-info">
+        <label>NOME DA FARMÁCIA
+            <input type="text" id="loja_nome" value="PHARMASHOP" maxlength="30" oninput="this.value=this.value.toUpperCase()">
+        </label>
+        <label>CNPJ
+            <input type="text" id="loja_cnpj" value="01.823.321/0002-30" maxlength="18">
+        </label>
+        <label>ENDEREÇO
+            <input type="text" id="loja_end" value="RUA:BENÍCIO FERNANDES 254-SÃO JOSÉ DA MATA" maxlength="55" oninput="this.value=this.value.toUpperCase()">
+        </label>
+        <label>TELEFONE
+            <input type="text" id="loja_tel" value="(83) 3314-1157" maxlength="18">
+        </label>
+    </div>
+
+    <div class="card">
+        <div class="table-wrap">
+            <table id="tbl">
+                <thead>
+                    <tr>
+                        <th style="width:36px">Nº</th>
+                        <th style="min-width:150px">PRODUTO</th>
+                        <th style="width:65px">QTDE</th>
+                        <th style="width:75px">VL. UNIT</th>
+                        <th style="width:85px">TOTAL</th>
+                        <th style="width:80px">AÇÃO</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody"></tbody>
+            </table>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-add"    onclick="addRow()">+ Adicionar Item</button>
+            <button class="btn btn-salvar" onclick="salvarPedido()">✓ Finalizar e Salvar</button>
+            <button class="btn btn-print"  onclick="imprimirCupom()">🖨 Imprimir Cupom</button>
+            <button class="btn btn-new"    onclick="novoPedido()">↻ Novo Pedido</button>
+        </div>
+    </div>
+
+    <div class="total-card">
+        <span class="total-label">VALOR TOTAL DO PEDIDO</span>
+        <span class="total-val" id="total_geral">R$ 0,00</span>
+    </div>
+</div>
+
+<!-- ABA HISTÓRICO -->
+<div id="sec-historico" class="section">
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <span style="color:#7ab3f0; font-size:13px; font-weight:bold;">Pedidos salvos</span>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="btn btn-print" style="padding:6px 14px; font-size:12px;" onclick="gerarRelatorioPDF()">📄 Totalizar e Salvar PDF</button>
+                <button class="btn btn-limpar" style="padding:6px 14px; font-size:12px;" onclick="limparHistorico()">🗑 Limpar Tudo</button>
+            </div>
+        </div>
+        <div id="lista-historico"></div>
+    </div>
+</div>
+
+<!-- ══════════ CUPOM TÉRMICO (só aparece na impressão) ══════════ -->
+<div id="cupom-impressao"></div>
+
+<script>
+/* ─────────────── UTILITÁRIOS ─────────────── */
+function fmtDt() {
+    var d = new Date();
+    return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR');
+}
+document.getElementById('dt').textContent = fmtDt();
+
+function pad(str, len, right) {
+    str = String(str);
+    while (str.length < len) str = right ? str + ' ' : ' ' + str;
+    return str.substring(0, len);
+}
+
+function linha(c, n) {
+    n = n || 42;
+    var s = '';
+    for (var i = 0; i < n; i++) s += c;
+    return s;
+}
+
+/* ─────────────── ABAS ─────────────── */
+function trocarAba(aba, el) {
+    document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
+    document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+    document.getElementById('sec-' + aba).classList.add('active');
+    el.classList.add('active');
+    if (aba === 'historico') renderHistorico();
+}
+
+/* ─────────────── TABELA ─────────────── */
+function renumerar() {
+    document.querySelectorAll('#tbody tr').forEach(function(r, i){
+        r.querySelector('.num-cell').textContent = i + 1;
+    });
+}
+
+function makeRow(n) {
+    var tr = document.createElement('tr');
+    var td0 = document.createElement('td');
+    td0.className = 'num-cell';
+    td0.textContent = n;
+    tr.appendChild(td0);
+
+    var fields = [
+        { ph: 'NOME DO PRODUTO', ro: false, w: '170px' },
+        { ph: '0',              ro: false, w: '55px'  },
+        { ph: '0,00',           ro: false, w: '65px'  },
+        { ph: '0,00',           ro: true,  w: '75px'  }
+    ];
+
+    fields.forEach(function(f, i) {
+        var td  = document.createElement('td');
+        var inp = document.createElement('input');
+        inp.type = 'text'; inp.className = 'fi';
+        inp.placeholder = f.ph; inp.readOnly = f.ro;
+        inp.style.width = f.w;
+        inp.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+            if (i === 1 || i === 2) { calcRow(tr); upTotal(); }
+        });
+        inp.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                var inps = tr.querySelectorAll('input:not([readonly])');
+                var idx2 = Array.prototype.indexOf.call(inps, this);
+                if (idx2 < inps.length - 1) { inps[idx2 + 1].focus(); }
+                else { addRow(); document.getElementById('tbody').lastElementChild.querySelector('input.fi').focus(); }
+            }
+        });
+        td.appendChild(inp);
+        tr.appendChild(td);
+    });
+
+    var tdA = document.createElement('td');
+    var btn = document.createElement('button');
+    btn.className = 'btn-del-row'; btn.textContent = '✖ Excluir Item';
+    btn.onclick = function() {
+        if (document.getElementById('tbody').rows.length > 1) {
+            tr.remove(); renumerar(); upTotal();
+        }
+    };
+    tdA.appendChild(btn);
+    tr.appendChild(tdA);
+    return tr;
+}
+
+function calcRow(tr) {
+    var inp = tr.querySelectorAll('input');
+    var q = parseFloat(inp[1].value.replace(',', '.')) || 0;
+    var v = parseFloat(inp[2].value.replace(',', '.')) || 0;
+    inp[3].value = (q * v).toFixed(2).replace('.', ',');
+}
+
+function upTotal() {
+    var t = 0;
+    document.querySelectorAll('#tbody tr').forEach(function(r) {
+        t += parseFloat(r.querySelectorAll('input')[3].value.replace(',', '.')) || 0;
+    });
+    document.getElementById('total_geral').textContent = 'R$ ' + t.toFixed(2).replace('.', ',');
+}
+
+function addRow() {
+    var tb = document.getElementById('tbody');
+    tb.appendChild(makeRow(tb.rows.length + 1));
+}
+
+function novoPedido() {
+    var tb = document.getElementById('tbody');
+    while (tb.rows.length > 0) tb.deleteRow(0);
+    addRow(); upTotal();
+}
+
+/* ─────────────── COLETA DE DADOS ─────────────── */
+function coletarItens() {
+    var itens = [];
+    document.querySelectorAll('#tbody tr').forEach(function(r) {
+        var inp = r.querySelectorAll('input');
+        var prod = inp[0].value.trim();
+        if (prod) {
+            itens.push({
+                produto: prod,
+                qtde:    inp[1].value || '1',
+                vlUnit:  inp[2].value || '0,00',
+                total:   inp[3].value || '0,00'
+            });
+        }
+    });
+    return itens;
+}
+
+function dadosLoja() {
+    return {
+        nome: document.getElementById('loja_nome').value || 'PHARMASHOP',
+        cnpj: document.getElementById('loja_cnpj').value || '',
+        end:  document.getElementById('loja_end').value  || '',
+        tel:  document.getElementById('loja_tel').value  || ''
+    };
+}
+
+/* ─────────────── GERAR CUPOM HTML ─────────────── */
+function gerarCupomHTML(itens, totalStr, loja, id, dataStr) {
+    var NUM_COLS = 42;
+
+    // Linha de produto: nome em cima, qtd x vlUnit = total embaixo
+    function itemLinhas(it, num) {
+        var nomeDisp = num + '. ' + it.produto;
+        // quebra nome se necessário
+        var nomePartes = [];
+        while (nomeDisp.length > NUM_COLS) {
+            nomePartes.push(nomeDisp.substring(0, NUM_COLS));
+            nomeDisp = '    ' + nomeDisp.substring(NUM_COLS);
+        }
+        nomePartes.push(nomeDisp);
+
+        var qtd    = it.qtde + ' x R$' + it.vlUnit;
+        var totStr = 'R$ ' + it.total;
+        var espaco = NUM_COLS - qtd.length - totStr.length;
+        var detalhe = qtd + (espaco > 0 ? linha(' ', espaco) : ' ') + totStr;
+
+        return '<div class="cp-item-block">' +
+            nomePartes.map(function(p){ return '<div class="cp-item-nome">' + escHtml(p) + '</div>'; }).join('') +
+            '<div class="cp-item-detail"><span>' + escHtml(qtd) + '</span><span>' + escHtml(totStr) + '</span></div>' +
+            '</div>';
+    }
+
+    function escHtml(s) {
+        return String(s)
+            .replace(/&/g,'&amp;')
+            .replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;');
+    }
+
+    var itensHTML = '';
+    itens.forEach(function(it, i) { itensHTML += itemLinhas(it, i + 1); });
+
+    // Quantidade de itens
+    var qtdTotal = 0;
+    itens.forEach(function(it){ qtdTotal += parseInt(it.qtde) || 1; });
+
+    var html =
+        // ── CABEÇALHO ──
+        '<div class="cp-big">' + escHtml(loja.nome) + '</div>' +
+
+        (loja.cnpj
+            ? '<div class="cp-center">CNPJ: ' + escHtml(loja.cnpj) + '</div>'
+            : '') +
+
+        (loja.end
+            ? '<div class="cp-center" style="font-size:7.5pt">' + escHtml(loja.end) + '</div>'
+            : '') +
+
+        (loja.tel
+            ? '<div class="cp-center">Tel: ' + escHtml(loja.tel) + '</div>'
+            : '') +
+
+        '<div class="cp-line-solid"></div>' +
+        '<div class="cp-center cp-bold">CUPOM NAO FISCAL</div>' +
+        '<div class="cp-line"></div>' +
+
+        // ID e data
+        '<div class="cp-row"><span>Pedido: <b>' + escHtml(id) + '</b></span><span>' + escHtml(dataStr) + '</span></div>' +
+        '<div class="cp-line"></div>' +
+
+        // ── ITENS ──
+        '<div class="cp-center cp-bold" style="margin-bottom:3px">ITENS DO PEDIDO</div>' +
+        itensHTML +
+
+        '<div class="cp-line"></div>' +
+
+        // ── RESUMO ──
+        '<div class="cp-row"><span>Itens (qtd.):</span><span>' + qtdTotal + '</span></div>' +
+        '<div class="cp-row"><span>Produtos:</span><span>' + itens.length + '</span></div>' +
+        '<div class="cp-line-solid"></div>' +
+
+        // ── TOTAL ──
+        '<div class="cp-total-box">' +
+            '<div class="cp-center cp-bold">TOTAL A PAGAR</div>' +
+            '<div class="cp-center cp-total-num">' + escHtml(totalStr) + '</div>' +
+        '</div>' +
+
+        // ── RODAPÉ ──
+        '<div class="cp-line"></div>' +
+        '<div class="cp-rodape">Obrigado pela preferencia!</div>' +
+        '<div class="cp-rodape">Volte sempre :)</div>' +
+        '<div class="cp-line"></div>' +
+        '<div class="cp-rodape" style="font-size:7pt">' + escHtml(dataStr) + '</div>' +
+        '<div style="height:20mm"></div>'; // avanço de papel
+
+    return html;
+}
+
+/* ─────────────── IMPRIMIR CUPOM ─────────────── */
+function imprimirCupom() {
+    var itens = coletarItens();
+    if (itens.length === 0) { alert('Adicione pelo menos um produto antes de imprimir.'); return; }
+
+    var historico = carregarHistorico();
+    var id = '#' + (historico.length + 1).toString().padStart(4, '0');
+    var totalStr = document.getElementById('total_geral').textContent;
+    var loja = dadosLoja();
+    var dataStr = fmtDt();
+
+    document.getElementById('cupom-impressao').innerHTML = gerarCupomHTML(itens, totalStr, loja, id, dataStr);
+    window.print();
+}
+
+/* ─────────────── SALVAR PEDIDO ─────────────── */
+function salvarPedido() {
+    var itens = coletarItens();
+    if (itens.length === 0) { alert('Adicione pelo menos um produto antes de salvar.'); return; }
+
+    var totalStr  = document.getElementById('total_geral').textContent;
+    var historico = carregarHistorico();
+    var id = '#' + (historico.length + 1).toString().padStart(4, '0');
+    var loja = dadosLoja();
+
+    historico.push({ id: id, data: fmtDt(), itens: itens, total: totalStr, loja: loja });
+    localStorage.setItem('pharmashop_historico', JSON.stringify(historico));
+    atualizarBadge();
+    alert('Pedido ' + id + ' salvo com sucesso!');
+    novoPedido();
+}
+
+/* ─────────────── HISTÓRICO ─────────────── */
+function carregarHistorico() {
+    try { return JSON.parse(localStorage.getItem('pharmashop_historico')) || []; }
+    catch(e) { return []; }
+}
+
+function atualizarBadge() {
+    document.getElementById('badge').textContent = carregarHistorico().length;
+}
+
+function renderHistorico() {
+    var lista = document.getElementById('lista-historico');
+    var hist  = carregarHistorico();
+    if (hist.length === 0) {
+        lista.innerHTML = '<div class="hist-vazio">Nenhum pedido salvo ainda.</div>';
+        return;
+    }
+    lista.innerHTML = '';
+    hist.slice().reverse().forEach(function(p, idx) {
+        var realIdx = hist.length - 1 - idx;
+        var div = document.createElement('div'); div.className = 'hist-card';
+        var resumo = p.itens.map(function(i){ return i.produto + ' (' + i.qtde + 'x)'; }).join(', ');
+        div.innerHTML =
+            '<div class="hist-header">' +
+              '<span class="hist-id">Pedido ' + p.id + '</span>' +
+              '<span class="hist-data">' + p.data + '</span>' +
+            '</div>' +
+            '<div class="hist-itens">' + resumo + '</div>' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">' +
+              '<span class="hist-total">' + p.total + '</span>' +
+              '<div style="display:flex;gap:6px;">' +
+                '<button class="btn-sm btn-sm-del" style="background:#1a3a5c;border:1px solid #2a5f8f;" onclick="reimprimir(' + realIdx + ')">🖨 Reimprimir</button>' +
+                '<button class="btn-sm btn-sm-del" onclick="excluirPedido(' + realIdx + ')">✖ Excluir</button>' +
+              '</div>' +
+            '</div>';
+        lista.appendChild(div);
+    });
+}
+
+function reimprimir(idx) {
+    var hist = carregarHistorico();
+    var p = hist[idx];
+    if (!p) return;
+    var loja = p.loja || dadosLoja();
+    document.getElementById('cupom-impressao').innerHTML = gerarCupomHTML(p.itens, p.total, loja, p.id, p.data);
+    window.print();
+}
+
+function excluirPedido(idx) {
+    if (!confirm('Excluir este pedido do histórico?')) return;
+    var hist = carregarHistorico();
+    hist.splice(idx, 1);
+    localStorage.setItem('pharmashop_historico', JSON.stringify(hist));
+    atualizarBadge(); renderHistorico();
+}
+
+function limparHistorico() {
+    if (!confirm('Limpar todo o histórico de pedidos?')) return;
+    localStorage.removeItem('pharmashop_historico');
+    atualizarBadge(); renderHistorico();
+}
+
+/* ─────────────── GERAR RELATÓRIO PDF ─────────────── */
+function gerarRelatorioPDF() {
+    var hist = carregarHistorico();
+    if (hist.length === 0) { alert('Nenhum pedido salvo para gerar relatório.'); return; }
+
+    var loja = dadosLoja();
+    var agora = fmtDt();
+    var { jsPDF } = window.jspdf;
+    var doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    var pageW = doc.internal.pageSize.getWidth();
+    var pageH = doc.internal.pageSize.getHeight();
+    var margin = 14;
+
+    // Cabeçalho
+    doc.setFillColor(232, 98, 10);
+    doc.rect(0, 0, pageW, 32, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16); doc.setFont('helvetica', 'bold');
+    doc.text(loja.nome, margin, 12);
+    doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+    if (loja.cnpj) doc.text('CNPJ: ' + loja.cnpj, margin, 19);
+    if (loja.end)  doc.text(loja.end, margin, 24);
+    if (loja.tel)  doc.text('Tel: ' + loja.tel + '   |   Gerado em: ' + agora, margin, 29);
+
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+    doc.text('RELATÓRIO DE PEDIDOS', pageW - margin, 12, { align: 'right' });
+
+    // Tabela de pedidos
+    var totalGeral = 0;
+    var rows = [];
+    hist.forEach(function(p) {
+        var vlPedido = parseFloat(String(p.total).replace('R$','').replace(/\./g,'').replace(',','.').trim()) || 0;
+        totalGeral += vlPedido;
+        var produtos = p.itens.map(function(it){ return it.qtde + 'x ' + it.produto + ' (R$' + it.vlUnit + ')'; }).join('\n');
+        rows.push([ p.id, p.data, produtos, String(p.itens.length), p.total ]);
+    });
+
+    doc.autoTable({
+        startY: 38,
+        head: [['PEDIDO', 'DATA/HORA', 'PRODUTOS', 'ITENS', 'TOTAL']],
+        body: rows,
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 8, cellPadding: 3, lineColor: [30, 58, 95], lineWidth: 0.2, textColor: [10, 22, 40] },
+        headStyles: { fillColor: [10, 22, 40], textColor: [255,255,255], fontStyle: 'bold', fontSize: 8 },
+        alternateRowStyles: { fillColor: [240, 245, 255] },
+        columnStyles: {
+            0: { cellWidth: 16, halign: 'center', fontStyle: 'bold' },
+            1: { cellWidth: 36 },
+            2: { cellWidth: 'auto' },
+            3: { cellWidth: 12, halign: 'center' },
+            4: { cellWidth: 26, halign: 'right', fontStyle: 'bold' }
+        }
+    });
+
+    // Linha de total geral
+    var fy = doc.lastAutoTable.finalY + 4;
+    doc.setFillColor(232, 98, 10);
+    doc.rect(margin, fy, pageW - margin * 2, 10, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+    doc.text('TOTAL GERAL — ' + hist.length + ' pedido(s)', margin + 3, fy + 6.5);
+    doc.text('R$ ' + totalGeral.toFixed(2).replace('.', ','), pageW - margin - 3, fy + 6.5, { align: 'right' });
+
+    // Rodapé
+    var totalPages = doc.internal.getNumberOfPages();
+    for (var pg = 1; pg <= totalPages; pg++) {
+        doc.setPage(pg);
+        doc.setFillColor(10, 22, 40);
+        doc.rect(0, pageH - 7, pageW, 7, 'F');
+        doc.setTextColor(100, 130, 170);
+        doc.setFontSize(6.5); doc.setFont('helvetica', 'normal');
+        doc.text(loja.nome + ' — ' + agora, margin, pageH - 2.5);
+        doc.text('Pag. ' + pg + '/' + totalPages, pageW - margin, pageH - 2.5, { align: 'right' });
+    }
+
+    doc.save('relatorio_' + new Date().toISOString().slice(0,10) + '.pdf');
+}
+
+/* ─────────────── INIT ─────────────── */
+addRow();
+atualizarBadge();
+</script>
+</body>
+</html>
