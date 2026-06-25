@@ -92,7 +92,10 @@
     .fields-grid input:focus, .fields-grid select:focus { border-color: #e8620a; }
     .fields-grid select option { background: #0a1628; }
 
-    /* ── RESPONSIVIDADE ── */
+   /* ── RESPONSIVIDADE ── */
+    @media (max-width: 1024px) {
+        .fields-grid label { flex: 1 1 calc(50% - 10px); }
+    }
     @media (max-width: 768px) {
         body { padding: 10px; }
         .header { padding: 12px 14px; } .header h1 { font-size: 18px; }
@@ -100,6 +103,33 @@
         .card { padding: 12px; }
         .btn { padding: 9px 14px; font-size: 12px; flex: 1 1 calc(50% - 8px); justify-content: center; }
         .fields-grid label { min-width: 100%; flex: 1 1 100%; }
+        /* Entrega e pagamento em coluna no tablet */
+        div[style*="flex-direction:row"][style*="flex-wrap:nowrap"] {
+            flex-wrap: wrap !important;
+            gap: 12px !important;
+        }
+        .total-row.destaque .total-val { font-size: 22px; min-width: 120px; }
+    }
+    @media (max-width: 600px) {
+        /* Tabela rola horizontalmente */
+        .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { min-width: 480px; }
+        th { font-size: 10px; padding: 8px 2px; }
+        td { padding: 3px 2px; }
+        input.fi { font-size: 11px; padding: 5px 4px; }
+        /* Entrega e pagamento empilham */
+        div[style*="flex-direction:row"][style*="flex-wrap:nowrap"] {
+            flex-direction: column !important;
+            flex-wrap: wrap !important;
+            gap: 10px !important;
+        }
+        div[style*="flex-direction:row"][style*="flex-wrap:nowrap"] label {
+            width: 100% !important;
+        }
+        div[style*="flex-direction:row"][style*="flex-wrap:nowrap"] label input,
+        div[style*="flex-direction:row"][style*="flex-wrap:nowrap"] label select {
+            width: 100% !important;
+        }
     }
     @media (max-width: 480px) {
         body { padding: 8px; }
@@ -107,14 +137,25 @@
         .tab { padding: 8px 10px; font-size: 11px; }
         .card { padding: 10px; }
         table { min-width: 420px; }
-        th { font-size: 10px; padding: 8px 5px; } td { padding: 4px; }
+        th { font-size: 10px; padding: 8px 2px; } td { padding: 3px 1px; }
         input.fi { font-size: 11px; padding: 5px 6px; }
         .btn-del-row { padding: 4px 8px; font-size: 10px; }
         .btn { padding: 9px 10px; font-size: 11px; flex: 1 1 calc(50% - 6px); justify-content: center; }
         .total-row.destaque .total-val { font-size: 20px; min-width: 110px; }
         .fields-grid label { min-width: 100%; flex: 1 1 100%; }
+        .btn-row { gap: 6px; }
+        .btn-row .btn { flex: 1 1 100%; }
+        .hist-actions { flex-direction: column; }
+        .btn-sm { width: 100%; text-align: center; }
     }
-
+    @media (max-width: 360px) {
+        .header h1 { font-size: 14px; }
+        .tab { font-size: 10px; padding: 7px 8px; }
+        table { min-width: 380px; }
+        th { font-size: 9px; }
+        input.fi { font-size: 10px; padding: 4px 4px; }
+        .total-row.destaque .total-val { font-size: 18px; min-width: 90px; }
+    }
     /* ── OCULTAR DADOS DA FARMÁCIA NA TELA ── */
     .loja-info { display: none; }
 
